@@ -30,7 +30,6 @@ app.post("/review", async (req, res) => {
     res.status(500).json({ error: "Error processing request" });
   }
 });
-console.log('hello');
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

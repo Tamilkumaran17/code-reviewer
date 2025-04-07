@@ -5,6 +5,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
 import "./App.css";
 import Button from "./Components/Button";
+import Profile from './Components/Profile';
 import { ThemeContext } from "./Components/ThemeChange";
 
 export default function CodeReviewer() {
@@ -36,8 +37,12 @@ export default function CodeReviewer() {
   };
 
   return (
+    <>
+      <Profile/>
+
+
     <div className="container">
-      <button  className="theme" onClick={toggleTheme} >{theme==="light" ? "🌙" : "☀️"}</button>
+      {/* <button  className="theme" onClick={toggleTheme} >{theme==="light" ? "🌙" : "☀️"}</button> */}
 
       <h1>Code Reviewer📌</h1>
 
@@ -92,5 +97,6 @@ export default function CodeReviewer() {
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
 import "./App.css";
 import Button from "./Components/Button";
 import Profile from './Components/Profile';
+import RatingChart from "./Components/RatingChart";
 import { ThemeContext } from "./Components/ThemeChange";
 
 export default function CodeReviewer() {
@@ -40,63 +41,70 @@ export default function CodeReviewer() {
     <>
       <Profile/>
 
+      <div className="main">
 
-    <div className="container">
-      {/* <button  className="theme" onClick={toggleTheme} >{theme==="light" ? "🌙" : "☀️"}</button> */}
 
-      <h1>Code Reviewer📌</h1>
+<div className="container">
+  {/* <button  className="theme" onClick={toggleTheme} >{theme==="light" ? "🌙" : "☀️"}</button> */}
 
-      <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-        <option value="cpp">C++</option>
-        <option value="javascript">JavaScript</option>
-        <option value="python">Python</option>
-        <option value="java">Java</option>
-        <option value="others">Others</option>
+  <h1>Code Reviewer📌</h1>
 
-      </select>
+  <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+    <option value="cpp">C++</option>
+    <option value="javascript">JavaScript</option>
+    <option value="python">Python</option>
+    <option value="java">Java</option>
+    <option value="others">Others</option>
 
-      <div className="editor-container">
-        <Editor height="400px" language={language} value={code} onChange={(value) => setCode(value)} />
-      </div>
+  </select>
 
-      <Button onClick={handleReview}>{loading ? "Reviewing..." : "Review Code"}</Button>
+  <div className="editor-container">
+    <Editor height="400px" language={language} value={code} onChange={(value) => setCode(value)} />
+  </div>
 
-      {loading && <div className="loader"></div>}
+  <Button onClick={handleReview}>{loading ? "Reviewing..." : "Review Code"}</Button>
 
-      {review && (
-        <div className="review-box">
-          <ReactMarkdown
-            children={review}
-            components={{
-              code({ node, inline, className, children, ...props }) {
-                const match = /language-(\w+)/.exec(className || "");
-                return !inline && match ? (
-                  <SyntaxHighlighter style={dracula} language={match[1]} PreTag="div" {...props}>
-                    {String(children).replace(/\n$/, "")}
-                  </SyntaxHighlighter>
-                ) : (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                );
-              },
-              strong({ children }) {
-                return <strong style={{ color: "#0056b3" }}>{children}</strong>; 
-              },
-              ul({ children }) {
-                return <ul style={{ paddingLeft: "20px", listStyleType: "disc" }}>{children}</ul>; 
-              },
-              li({ children }) {
-                return <li style={{ marginBottom: "5px" }}>{children}</li>; 
-              },
-              p({ children }) {
-                return <p style={{ marginBottom: "10px" }}>{children}</p>; 
-              },
-            }}
-          />
-        </div>
-      )}
+  {loading && <div className="loader"></div>}
+
+  {review && (
+    <div className="review-box">
+      <ReactMarkdown
+        children={review}
+        components={{
+          code({ node, inline, className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || "");
+            return !inline && match ? (
+              <SyntaxHighlighter style={dracula} language={match[1]} PreTag="div" {...props}>
+                {String(children).replace(/\n$/, "")}
+              </SyntaxHighlighter>
+            ) : (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
+          strong({ children }) {
+            return <strong style={{ color: "#0056b3" }}>{children}</strong>; 
+          },
+          ul({ children }) {
+            return <ul style={{ paddingLeft: "20px", listStyleType: "disc" }}>{children}</ul>; 
+          },
+          li({ children }) {
+            return <li style={{ marginBottom: "5px" }}>{children}</li>; 
+          },
+          p({ children }) {
+            return <p style={{ marginBottom: "10px" }}>{children}</p>; 
+          },
+        }}
+      />
     </div>
+  )}
+      </div>
+          <div className="graph">
+            <h3 style={{'text-align':'center'}}>Review Rating</h3>
+            <RatingChart/>
+          </div>
+      </div>
     </>
   );
 }

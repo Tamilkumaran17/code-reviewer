@@ -1,15 +1,17 @@
 :root {
   --bg-color: #ffffff;
   --text-color: #000000;
+  --container-bg: #ffffff;
 }
 
 [data-theme="dark"] {
   --bg-color: #121212;
-  --text-color: #000000;
+  --text-color: #f0f0f0;
+  --container-bg: #1e1e1e;
 }
 
 body {
-  font-family: poppins;
+  font-family: Poppins, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   transition: all 0.3s ease;
@@ -18,17 +20,18 @@ body {
 }
 
 .container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 20px auto;
   padding: 20px;
-  background: white;
+  background: var(--container-bg);
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
 h1 {
   text-align: center;
-  color: #333;
+  color: var(--text-color);
 }
 
 select {
@@ -44,65 +47,40 @@ select {
   border: 2px solid #ccc;
   border-radius: 5px;
   overflow: hidden;
-}
-
-
-
-/* Button */
-/* button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
   margin-top: 10px;
 }
 
-button:hover {
-  background-color: #0056b3;
-} */
-
-.theme{
+.theme {
   position: relative;
-  align-items: left;
-  justify-content: left;
   left: 96%;
   height: 40px;
-  width: auto;
   font-weight: 600;
   font-size: 20px;
   border-radius: 50px;
   border: 1px solid gray;
   cursor: pointer;
-    
+  background-color: transparent;
+  color: var(--text-color);
 }
-.theme:hover{
-  box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
-  transition: .3s ease-out;
+.theme:hover {
+  box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px,
+              rgba(0, 0, 0, 0.23) 0px 6px 6px;
+  transition: 0.3s ease-out;
 }
 
 .review-box {
-  background-color: #f8f9fa; 
-  border-left: 5px solid #007bff; 
+  background-color: var(--bg-color);
+  border-left: 5px solid #007bff;
   padding: 15px;
   margin-top: 15px;
-  font-family:Arial, Helvetica, sans-serif; 
-  white-space: pre-wrap; 
-  overflow-x: auto; 
-  max-width: 100%;
-  line-height: 1.5;
-}
-
-.review-box strong {
-  color: #e51212; 
-  font-weight: bold;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
 .review-box pre {
-  background: #282a36; 
+  background: #282a36;
   color: #f8f8f2;
   padding: 10px;
   border-radius: 5px;
@@ -111,7 +89,7 @@ button:hover {
 
 .review-box ul {
   padding-left: 20px;
-  list-style-type: disc; 
+  list-style-type: disc;
 }
 
 .review-box li {
@@ -119,7 +97,7 @@ button:hover {
 }
 
 .review-box p {
-  margin-bottom: 10px; 
+  margin-bottom: 10px;
   line-height: 1.6;
 }
 
@@ -136,4 +114,46 @@ button:hover {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.chart-container {
+  margin-top: 30px;
+  background-color: var(--container-bg);
+  padding: 20px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+/* Dark Mode Styles */
+body.dark {
+  background-color: #1e1e1e;
+  color: #eaeaea;
+}
+
+select.dark {
+  background-color: #2d2d2d;
+  color: #ffffff;
+  border: 1px solid #555;
+}
+
+/* Light Mode Styles */
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+select.light {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ccc;
+}
+
+.editor-container.dark .monaco-editor {
+  background-color: #1e1e1e;
+  color: #eaeaea;
+}
+
+.editor-container.light .monaco-editor {
+  background-color: #ffffff;
+  color: #000000;
 }

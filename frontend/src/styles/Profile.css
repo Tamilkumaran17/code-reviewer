@@ -1,0 +1,55 @@
+
+.circle
+{
+    position: relative;
+    align-items: left;
+    justify-content: left;
+    left: 95.4%;
+    top: 14px;
+    height: 50px;
+    width: 50px;
+    font-weight: 600;
+    font-size: 20px;
+    border-radius: 50px;
+    /* border: 2px solid rgb(0, 0, 0); */
+    cursor: pointer;
+}
+
+.circle .user{
+    position: relative;
+    left:5px;
+    top: 5px;
+}
+
+.togglelayout
+{
+    cursor:default;
+    position: absolute;
+    right: 30px;
+    top: 70px;
+    width: 250px;
+    height: 200px;
+    border: 1px solid black;
+    border-radius: 10px;
+    background-color: rgba(242, 244, 244, 0.521);
+}
+.togglelayout p {
+    text-align: center;
+    font-weight: 500;
+    
+    
+}
+h4{
+    text-align: center;
+
+}
+.log{
+    position: relative;
+    border: 1px solid black;
+    width:70px;
+    border-radius: 30px;
+    top: 30px;
+    left: 90px;
+    font-size: 15px;
+    cursor: pointer;
+}

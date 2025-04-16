@@ -17,6 +17,9 @@ import {
 import "./App.css"; // Import the styles
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Legend, Tooltip);
+import Profile from './Components/Profile';
+import { ThemeContext } from "./Components/ThemeChange";
+
 
 export default function CodeReviewer() {
   const [code, setCode] = useState("// Write your code here...");
@@ -62,10 +65,18 @@ export default function CodeReviewer() {
   };
 
   return (
+// <<<<<<< karthick-dev
     <div className={`container ${theme}`}>
       <button className="theme" onClick={toggleTheme}>
         {theme === "light" ? "🌙" : "☀️"}
       </button>
+
+    <>
+      <Profile/>
+
+
+    <div className="container">
+      {/* <button  className="theme" onClick={toggleTheme} >{theme==="light" ? "🌙" : "☀️"}</button> */}
 
       <h1>Code Reviewer📌</h1>
 
@@ -134,5 +145,6 @@ export default function CodeReviewer() {
         </div>
       )}
     </div>
+    </>
   );
 }

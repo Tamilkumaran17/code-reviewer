@@ -25,7 +25,7 @@ export default function Profile() {
            {toggle ? 
             <div className='togglelayout' onClick={stopclickpropagesion}>
 
-                <h4>Welcome Mairandii </h4>
+                <h4>Welcome m </h4>
                 <p> Joined at 12.30 </p>
                 <p className='log'> logout</p>
 

@@ -12,34 +12,42 @@ import { ThemeContext } from "./Components/ThemeChange";
 export default function CodeReviewer() {
   const [code, setCode] = useState("// Write your code here...");
   const [language, setLanguage] = useState("javascript");
-  const [review, setReview] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const {theme, toggleTheme} = useContext(ThemeContext);
+  const [review, setReview] = useState("");
+const [alternativeCode, setAlternativeCode] = useState("");
+const [ratings, setRatings] = useState({});
 
-  const handleReview = async () => {
 
-    setLoading(true); 
-    setReview("");
+const handleReview = async () => {
+  setLoading(true);
+  setReview("");
+  setAlternativeCode("");
+  setRatings({});
 
-    try {
-      const response = await fetch("http://localhost:5000/review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language }),
-      });
+  try {
+    const response = await fetch("http://localhost:5000/review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, language }),
+    });
 
-      const data = await response.json();
-      setReview(data.review);
-    } catch (error) {
-      setReview("⚠️ Error fetching review. Please try again.");
-    } finally {
-      setLoading(false); 
-    }
-  };
+    const data = await response.json();
+    setReview(data.review);
+    setAlternativeCode(data.alternative_code);
+    setRatings(data.ratings);
+  } catch (error) {
+    setReview("⚠️ Error fetching review. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <>
-      <Profile/>
+      {/* <Profile/> */}
 
       <div className="main">
 
@@ -67,44 +75,82 @@ export default function CodeReviewer() {
   {loading && <div className="loader"></div>}
 
   {review && (
-    <div className="review-box">
-      <ReactMarkdown
-        children={review}
-        components={{
-          code({ node, inline, className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || "");
-            return !inline && match ? (
-              <SyntaxHighlighter style={dracula} language={match[1]} PreTag="div" {...props}>
-                {String(children).replace(/\n$/, "")}
-              </SyntaxHighlighter>
-            ) : (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            );
-          },
-          strong({ children }) {
-            return <strong style={{ color: "#0056b3" }}>{children}</strong>; 
-          },
-          ul({ children }) {
-            return <ul style={{ paddingLeft: "20px", listStyleType: "disc" }}>{children}</ul>; 
-          },
-          li({ children }) {
-            return <li style={{ marginBottom: "5px" }}>{children}</li>; 
-          },
-          p({ children }) {
-            return <p style={{ marginBottom: "10px" }}>{children}</p>; 
-          },
-        }}
-      />
-    </div>
-  )}
+  <div className="review-box">
+    <h2>Review:</h2>
+    <ReactMarkdown
+      children={review}
+      components={{
+        code({ node, inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || "");
+          return !inline && match ? (
+            <SyntaxHighlighter style={dracula} language={match[1]} PreTag="div" {...props}>
+              {String(children).replace(/\n$/, "")}
+            </SyntaxHighlighter>
+          ) : (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          );
+        },
+        strong({ children }) {
+          return <strong style={{ color: "#0056b3" }}>{children}</strong>;
+        },
+        ul({ children }) {
+          return <ul style={{ paddingLeft: "20px", listStyleType: "disc" }}>{children}</ul>;
+        },
+        li({ children }) {
+          return <li style={{ marginBottom: "5px" }}>{children}</li>;
+        },
+        p({ children }) {
+          return <p style={{ marginBottom: "10px" }}>{children}</p>;
+        },
+      }}
+    />
+  </div>
+)}
+
+{alternativeCode && alternativeCode !== "Code is basic. No alternative needed." && (
+  <div className="review-box">
+    <h2>Improved Version:</h2>
+    <ReactMarkdown
+      children={alternativeCode}
+      components={{
+        code({ node, inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || "");
+          return !inline && match ? (
+            <SyntaxHighlighter style={dracula} language={match[1]} PreTag="div" {...props}>
+              {String(children).replace(/\n$/, "")}
+            </SyntaxHighlighter>
+          ) : (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          );
+        },
+        strong({ children }) {
+          return <strong style={{ color: "#28a745" }}>{children}</strong>;
+        },
+        ul({ children }) {
+          return <ul style={{ paddingLeft: "20px", listStyleType: "circle" }}>{children}</ul>;
+        },
+        li({ children }) {
+          return <li style={{ marginBottom: "5px" }}>{children}</li>;
+        },
+        p({ children }) {
+          return <p style={{ marginBottom: "10px" }}>{children}</p>;
+        },
+      }}
+    />
+  </div>
+)}
+
       </div>
           <div className="graph">
             <h3 style={{'text-align':'center'}}>Review Rating</h3>
-            <RatingChart/>
+            <RatingChart ratings={ratings}/>
           </div>
       </div>
     </>
   );
 }
+

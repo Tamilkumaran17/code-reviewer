@@ -1,75 +1,106 @@
+// backend/server.js
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { config } from "dotenv";
-config(); // Load environment variables from .env file
+import OpenAI from "openai";
 
+dotenv.config();
 const app = express();
 const PORT = 5000;
-// const cors=require("cors");
+
 app.use(cors());
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// ==== Initialize APIs ====
+const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-app.post("/review", async (req, res) => {
+// ==== Gemini ====
+async function getGeminiReview(code, language) {
   try {
-    const { code, language } = req.body;
+    const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
-
-    const prompt = `
-You are an expert ${language} developer.
-
-Analyze the following code carefully:
-\`\`\`${language}
-${code}
-\`\`\`
-
-Return output in following JSON format ONLY:
-
+    const prompt = `Review this ${language} code:\n${code}\n
+Return JSON strictly in this format:
 {
-  "review": "Explain clearly what mistakes are there, what improvements are needed, and any good points.",
-  "alternative_code": "ONLY if code is complex, suggest better/improved version, else say 'Code is basic. No alternative needed.'",
-  "ratings": {
-    "time_complexity": 1-5,
-    "memory_efficiency": 1-5,
-    "code_structure": 1-5,
-    "readability": 1-5,
-    "best_practices": 1-5
+  "review": "feedback text",
+  "revisedCode": "CODE_SNIPPET_HERE",
+  "ratings": { "readability": number, "performance": number, "security": number, "maintainability": number }
+}`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().replace(/```json|```/g, "").trim();
+    const parsed= JSON.parse(text);
+
+    parsed.revisedCode = `\`\`\`${language}\n${parsed.revisedCode}\n\`\`\``;
+    return parsed;
+
+  } catch (err) {
+    console.error("Gemini error:", err.message);
+    return {
+      review: "Gemini failed",
+      revisedCode: "",
+      ratings: {},
+      error: err.message,
+    };
   }
 }
-`;
 
-    const result = await model.generateContent({
-      contents: [{ parts: [{ text: prompt }] }]
+// ==== OpenAI ====
+async function getOpenAIReview(code, language) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: `You are an expert software engineer and technical reviewer.
+Analyze and review the following ${language} code thoroughly.
+Write a detailed, structured review covering correctness, performance, readability, and maintainability.
+Then return the response strictly as JSON:
+{
+  "review": "A rich, multi-paragraph explanation with technical details and suggestions for improvement.",
+  "revisedCode": "CODE_SNIPPET_HERE",
+  "ratings": { "readability": number, "performance": number, "security": number, "maintainability": number }
+}
+
+Code:
+${code}`
+        }
+      ],
     });
 
-    const response = result.response;
-    const rawText = response.text();
+    const text = completion.choices[0].message.content.replace(/```json|```/g, "").trim();
+    const parsed= JSON.parse(text);
 
-    console.log("Raw Gemini Response:", rawText);
-
-    // Gemini should give clean JSON, parse it
-    const cleanedText = rawText.trim().replace(/```json|```/g, ""); // Remove markdown backticks
-    const parsed = JSON.parse(cleanedText);
-
-    const { review, alternative_code, ratings } = parsed;
-
-    const formattedAlternativeCode = `\`\`\`${language}\n${alternative_code}\n\`\`\``;
-
-
-    res.json({ review, alternative_code: formattedAlternativeCode, ratings });
-
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ error: "Error processing request" });
+    parsed.revisedCode = `\`\`\`${language}\n${parsed.revisedCode}\n\`\`\``;
+    return parsed;
+  } catch (err) {
+    console.error("OpenAI error:", err.message);
+    return {
+      review: "OpenAI failed",
+      revisedCode: "",
+      ratings: {},
+      error: err.message,
+    };
   }
+}
+
+// ==== Route ====
+app.post("/review", async (req, res) => {
+  const { code, language } = req.body;
+  if (!code) return res.status(400).json({ error: "Code input required" });
+
+  const [geminiRes, openaiRes] = await Promise.all([
+    getGeminiReview(code, language),
+    getOpenAIReview(code, language),
+  ]);
+
+  res.json({ gemini: geminiRes, openai: openaiRes });
 });
 
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-
+// ==== Start ====
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+);

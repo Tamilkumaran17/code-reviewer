@@ -36,16 +36,28 @@ export default function CodeReviewer() {
       const data = await response.json();
       setResults(data);
 
-      // Pick best AI (only Gemini and Claude now)
-      let best = "gemini";
-      let bestScore = 0;
-      for (const ai of ["gemini", "openai"]) {
-        if (data[ai]?.ratings?.readability > bestScore) {
-          best = ai;
-          bestScore = data[ai].ratings.readability;
-        }
+      // // Pick best AI (only Gemini and Claude now)
+      // let best = "gemini";
+      // let bestScore = 0;
+      // for (const ai of ["gemini", "openai"]) {
+      //   if (data[ai]?.ratings?.readability > bestScore) {
+      //     best = ai;
+      //     bestScore = data[ai].ratings.readability;
+      //   }
+      // }
+      // setBestAI(best);
+
+
+      if(data.judge?.best)
+      {
+        setBestAI(data.judge.best);
       }
-      setBestAI(best);
+      else{
+        setBestAI("undecided");
+      }
+
+
+
     } catch (err) {
       console.error("Frontend error:", err);
       alert("Error fetching review. Check server logs.");
@@ -143,9 +155,20 @@ export default function CodeReviewer() {
 
             <div className="review-box">
               <h3>🤖 Best Review Suggestion</h3>
-              <p>
-                <strong>{bestAI}</strong> gave the best review because it {bestReason}
-              </p>
+              {results.judge ?(
+                <>
+                    <p>
+                      <strong>
+                        {results.judge.best.toUpperCase()}
+                      </strong> was chosen as the best reviewer.
+                    </p>
+                    <p>
+                      <em>Reason:</em> {results.judge.reason}
+                    </p>
+                </>
+              ) : (
+                <p> DeepSeek did not return a judgement.</p>
+              )}
             </div>
           </div>
         )}

@@ -130,10 +130,11 @@ select {
 }
 
 .review-box pre {
+   margin: 0.5em 0;
   background: #282a36;
   color: #f8f8f2;
-  padding: 10px;
-  border-radius: 5px;
+  padding: 8px;
+  border-radius: 8px;
   overflow-x: auto;
 }
 
@@ -147,8 +148,9 @@ select {
 }
 
 .review-box p {
+   margin: 0.4em 0;
   margin-bottom: 10px;
-  line-height: 1.6;
+  line-height: 1.4;
 }
 
 .rating-chart-wrapper {

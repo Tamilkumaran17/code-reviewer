@@ -16,26 +16,52 @@ app.use(express.json());
 const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+function normalizeReview(text) {
+  if (!text) return "";
+  return text
+    .replace(/\r/g, "")                 
+    .replace(/[ \t]+\n/g, "\n")       
+    .replace(/\n{2,}/g, "\n")         
+    .trim();
+}
+
+
+function cleanResponse(text) {
+  if (!text) return "";
+  return String(text)
+    .replace(/^\s*```[a-zA-Z0-9+-]*\n?/, "")
+    .replace(/\n?```$/, "")
+    .trim();
+}
+
 // ==== Gemini ====
 async function getGeminiReview(code, language) {
   try {
     const model = gemini.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `Review this ${language} code:\n${code}\n
-Return JSON strictly in this format:
+    const prompt = `You are an expert software reviewer.
+Review this ${language} code and return JSON strictly in this format:
 {
-  "review": "feedback text",
+  "review": "Detailed feedback",
   "revisedCode": "CODE_SNIPPET_HERE",
-  "ratings": { "readability": number, "performance": number, "security": number, "maintainability": number }
-}`;
+  "ratings": {
+    "readability": number,
+    "performance": number,
+    "security": number,
+    "maintainability": number
+  }
+}
+
+Code:
+${code}`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text().replace(/```json|```/g, "").trim();
-    const parsed= JSON.parse(text);
+    const parsed = JSON.parse(text);
 
-    parsed.revisedCode = `\`\`\`${language}\n${parsed.revisedCode}\n\`\`\``;
+    parsed.review = normalizeReview(parsed.review);
+    parsed.revisedCode = "```" + language + "\n" + cleanResponse(parsed.revisedCode) + "\n```";
     return parsed;
-
   } catch (err) {
     console.error("Gemini error:", err.message);
     return {
@@ -47,7 +73,7 @@ Return JSON strictly in this format:
   }
 }
 
-// ==== OpenAI ====
+// ==== OpenAI Review ====
 async function getOpenAIReview(code, language) {
   try {
     const completion = await openai.chat.completions.create({
@@ -55,26 +81,32 @@ async function getOpenAIReview(code, language) {
       messages: [
         {
           role: "user",
-          content: `You are an expert software engineer and technical reviewer.
-Analyze and review the following ${language} code thoroughly.
-Write a detailed, structured review covering correctness, performance, readability, and maintainability.
-Then return the response strictly as JSON:
+          content: `You are an expert software engineer.
+Review the following ${language} code thoroughly.
+Please format your review with Markdown headers and bullet points for clarity.
+Return JSON strictly as:
 {
-  "review": "A rich, multi-paragraph explanation with technical details and suggestions for improvement.",
+  "review": "Detailed multi-paragraph feedback",
   "revisedCode": "CODE_SNIPPET_HERE",
-  "ratings": { "readability": number, "performance": number, "security": number, "maintainability": number }
+  "ratings": {
+    "readability": number,
+    "performance": number,
+    "security": number,
+    "maintainability": number
+  }
 }
 
 Code:
-${code}`
-        }
+${code}`,
+        },
       ],
     });
 
     const text = completion.choices[0].message.content.replace(/```json|```/g, "").trim();
-    const parsed= JSON.parse(text);
+    const parsed = JSON.parse(text);
 
-    parsed.revisedCode = `\`\`\`${language}\n${parsed.revisedCode}\n\`\`\``;
+    parsed.review = normalizeReview(parsed.review);
+    parsed.revisedCode = "```" + language + "\n" + cleanResponse(parsed.revisedCode) + "\n```";
     return parsed;
   } catch (err) {
     console.error("OpenAI error:", err.message);
@@ -84,6 +116,62 @@ ${code}`
       ratings: {},
       error: err.message,
     };
+  }
+}
+
+// ==== OpenAI Judge ====
+async function getOpenAIJudgement(geminiRes, openaiRes, code, language) {
+  try {
+    const judgePrompt = `You are an impartial senior software reviewer.
+Two AIs (Gemini and ChatGPT) reviewed the same ${language} code. Compare them carefully.
+
+Return ONLY valid JSON — no Markdown, no code fences.
+
+Example Output:
+{
+  "best": "gemini",
+  "reason": "Gemini gave more technical detail and better-structured suggestions."
+}
+
+Original code:
+${code}
+
+=== Gemini Review ===
+${geminiRes.review}
+
+=== Gemini Revised Code ===
+${geminiRes.revisedCode}
+
+=== ChatGPT Review ===
+${openaiRes.review}
+
+=== ChatGPT Revised Code ===
+${openaiRes.revisedCode}
+
+Choose which review is better (gemini or openai) and explain briefly why. Return ONLY JSON.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: judgePrompt }],
+      temperature: 0.3,
+      max_tokens: 300,
+    });
+
+    const raw = completion.choices[0].message.content || "";
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+
+    let parsed;
+    if (jsonMatch) {
+      parsed = JSON.parse(jsonMatch[0]);
+    } else {
+      parsed = { best: "none", reason: "Judging failed: no valid JSON in output" };
+    }
+
+    console.log("🧠 OpenAI Judge Result:", parsed);
+    return parsed;
+  } catch (err) {
+    console.error("Judge error:", err.message);
+    return { best: "none", reason: "Judging failed: " + err.message };
   }
 }
 
@@ -97,10 +185,10 @@ app.post("/review", async (req, res) => {
     getOpenAIReview(code, language),
   ]);
 
-  res.json({ gemini: geminiRes, openai: openaiRes });
+  const openaiJudge = await getOpenAIJudgement(geminiRes, openaiRes, code, language);
+
+  res.json({ gemini: geminiRes, openai: openaiRes, judge: openaiJudge });
 });
 
 // ==== Start ====
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));

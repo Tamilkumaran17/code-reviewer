@@ -1,5 +1,5 @@
-import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale } from "chart.js";
+import { Bar,PolarArea} from "react-chartjs-2";
+import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Ticks } from "chart.js";
 import React from "react";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale);
@@ -21,21 +21,36 @@ export default function RatingChart({ ratings }) {
       {
         label: "Code Rating",
         data: ratings,
-        backgroundColor: "rgba(75, 192, 192, 0.5)",
-        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(9, 248, 89, 0.76)",
+        borderColor: "rgba(75, 192, 98, 1)",
         borderWidth: 1,
+        barThickness: 45
       },
     ],
   };
 
   const options = {
+    responsive:true,
+    // maintainAspectRatio: false,
     scales: {
+      x:{
+        ticks:{
+          font:{
+            size:12,
+          },
+        },
+      },
       y: {
         beginAtZero: true,
         max: 10,
+        ticks:{
+          stepSize:2,
+          font:{
+            size:12,
+          },
+        },
       },
     },
-    responsive: true,
     plugins: {
       legend: {
         display: false,
@@ -43,5 +58,5 @@ export default function RatingChart({ ratings }) {
     },
   };
 
-  return <Bar data={data} options={options} />;
+  return <Bar data={data} options={options} />
 }

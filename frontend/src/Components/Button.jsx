@@ -1,8 +1,8 @@
 import '../styles/Button.css';
 
-export default function Button({ onClick, children }) {
+export default function Button({children, ...props }) {
     return (
-      <button className="custom-button" onClick={onClick}>
+      <button className="custom-button" {...props}>
         {children}
       </button>
     );
